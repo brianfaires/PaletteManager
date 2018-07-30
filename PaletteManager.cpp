@@ -1,148 +1,92 @@
-#include "Arduino.h"
 #include "PaletteManager.h"
-#include "CustomPalettes.h"
 
-PaletteManager::PaletteManager() {
-  curPalette = 0;
-  walkStyle = 0;
-  updateInterval = 0;
-  switchingPalette = false;
-  palette = PastelColors_p;
-  PaletteRGB2HSV(&palette, &palette_hsv);
+PaletteManager::PaletteManager() { }
+
+uint8_t PaletteManager::GetTarget() { return target; }
+void PaletteManager::SetTarget(uint8_t newTarget, uint32_t curTime) {
+  target = newTarget % NUM_PALETTES;
+  memcpy(oldPalette, palette, sizeof(CHSV)*PALETTE_SIZE);
+  memcpy(targetPalette, allPalettes[target], sizeof(CHSV)*PALETTE_SIZE);
+  lastSwitchTime = curTime;
 }
 
-void PaletteManager::NextWalkStyle() {
-  if(walkStyle == WS_BLEND_SLOW || walkStyle == WS_BLEND_FAST) {
-    // Undo the partial transition into the next palette
-    curPalette = curPalette==0 ? NUM_PALETTES-1 : curPalette-1;
-  }
-  walkStyle = (walkStyle+1) % NUM_WALK_STYLES;
-
-  StartPaletteTransition(); // Transition back to unadulturated palette
+uint32_t PaletteManager::GetWalkLength() { return walkLength; }
+void PaletteManager::SetWalkLength(uint32_t newWalkLength, uint32_t curTime) {
+  walkLength = newWalkLength;
+  memcpy(oldPalette, palette, sizeof(CHSV)*PALETTE_SIZE);
+  lastSwitchTime = curTime;
 }
 
-void PaletteManager::NextPalette() {
-  curPalette = (curPalette+1) % NUM_PALETTES;
-  StartPaletteTransition();
-}
-
-void PaletteManager::StartPaletteTransition() {
-  targetPalette = GetPalette(curPalette);
-  CHSVPalette16 temp;
-  PaletteRGB2HSV(&targetPalette, &temp);
-  targetPalette = temp;
-  switchingPalette = true;
-  updateInterval = INTERVAL_PALETTE_SWITCHING;
-}
-
-void PaletteManager::Update() {
-  if(switchingPalette) {
-    nblendPaletteTowardPalette(palette, targetPalette);
-    if(palette == targetPalette) {
-      switchingPalette = false;
-      PaletteRGB2HSV(&palette, &palette_hsv);
-      SetUpdateInterval();
+uint32_t PaletteManager::GetPauseLength() { return pauseLength; }
+void PaletteManager::SetPauseLength(uint32_t newPauseLength, uint32_t curTime) {
+  memcpy(oldPalette, palette, sizeof(CHSV)*PALETTE_SIZE);
+  
+  if(curTime - lastSwitchTime <= pauseLength) {
+    // Haven't started blending yet
+    if(curTime - lastSwitchTime <= newPauseLength) {
+      // Just update the timer, neither one has tripped yet
+    }
+    else {
+      // Start blending immediately
+      lastSwitchTime - curTime - newPauseLength;
     }
   }
   else {
-    // Do walking logic if not switching palettes
-    switch(walkStyle) {
-      case WS_SWITCH_SLOW:
-      case WS_SWITCH_FAST:
-        NextPalette();
-        break;
-      
-      case WS_BLEND_SLOW:
-      case WS_BLEND_FAST:
-        NextPalette();
-        SetUpdateInterval();
-        break;
-        
-      case WS_RAND_SLOW:
-      case WS_RAND_FAST:
-        if(random8(2) == 0)
-          for(CHSV & pixel : palette_hsv.entries) { pixel.hue++;}
-        else
-          for(CHSV & pixel : palette_hsv.entries) { pixel.hue--;}
-        break;
-        
-      case WS_CYCLE_SLOW:
-      case WS_CYCLE_MED:
-      case WS_CYCLE_FAST:
-        for(CHSV & pixel : palette_hsv.entries) { pixel.hue++;}
-        break;
+    // Middle of blending, offset by difference to keep blend the same
+    lastSwitchTime -= (newPauseLength - pauseLength);
+  }
+
+  pauseLength = newPauseLength;
+}
+
+void PaletteManager::Init(uint32_t initialWalkLength, uint32_t intialPauseLength, uint32_t curTime) {
+  walkLength = initialWalkLength;
+  pauseLength = intialPauseLength;
+  lastSwitchTime = curTime;
+  memcpy(palette, allPalettes[0], sizeof(CHSV)*PALETTE_SIZE);
+  memcpy(oldPalette, allPalettes[0], sizeof(CHSV)*PALETTE_SIZE);
+  target = 1 % NUM_PALETTES;
+  memcpy(targetPalette, allPalettes[target], sizeof(CHSV)*PALETTE_SIZE);
+}
+
+void PaletteManager::SkipTime(uint32_t amount) {
+  lastSwitchTime += amount;
+}
+
+void PaletteManager::Update(uint32_t curTime) {
+  if(curTime - lastSwitchTime >= pauseLength) {
+    uint32_t transitionTime = curTime - lastSwitchTime - pauseLength;
+    if(transitionTime < walkLength) {
+      uint8_t blendAmount = 255 * transitionTime / walkLength;//debug: changed from 256, why?
+      for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
+        palette[i] = blend(oldPalette[i], targetPalette[i], blendAmount, /*gradientProtection ? blendDirections[i] :*/ SHORTEST_HUES);
+      }
     }
-  
-    palette = palette_hsv;
+    else {
+      // Blending just finished
+      memcpy(palette, targetPalette, sizeof(CHSV)*PALETTE_SIZE);
+      target = (target + 1) % NUM_PALETTES;
+      memcpy(targetPalette, allPalettes[target], sizeof(CHSV)*PALETTE_SIZE);
+      memcpy(oldPalette, palette, sizeof(CHSV)*PALETTE_SIZE);
+      lastSwitchTime = curTime;
+    }
   }
+  // TODO: Alternatively, directly access the pointer and get rid of target
+  //targetPalette += sizeof(CHSV);
+  //if(targetPalette == allPalettes[sizeof(CHSV)*NUM_PALETTES]) { targetPalette -= sizeof(CHSV)*NUM_PALETTES; }
+
+  #ifdef USE_TEST_PALETTE
+    memcpy(palette, test_palette, sizeof(CHSV)*PALETTE_SIZE);
+    memcpy(oldPalette, test_palette, sizeof(CHSV)*PALETTE_SIZE);
+    memcpy(targetPalette, test_palette, sizeof(CHSV)*PALETTE_SIZE);
+  #endif
 }
 
-void PaletteManager::SetUpdateInterval() {
-  switch(walkStyle) {
-    case WS_SWITCH_SLOW:
-      updateInterval = 10000;
-      break;
-    case WS_SWITCH_FAST:
-      updateInterval = 4000;
-      break;
-    case WS_BLEND_SLOW:
-      updateInterval = 50;
-      break;
-    case WS_RAND_SLOW:
-      updateInterval = 13;
-      break;
-    case WS_CYCLE_SLOW:
-      updateInterval = 50;
-      break;
-    case WS_CYCLE_MED:
-      updateInterval = 20;
-      break;
-    case WS_BLEND_FAST:
-      updateInterval = 15;
-      break;
-    case WS_CYCLE_FAST:
-      updateInterval = 8;
-      break;
-    case WS_RAND_FAST:
-      updateInterval = 5;
-      break;
-  }
-}
-
-CHSV PaletteManager::GetRandomColor(uint8_t brightness) {
-  uint8_t index = random8(4);
-  CHSV randColor = ColorFromPalette(palette_hsv, 128 + index * 64);
-  if(brightness) randColor.value = brightness;
-  return randColor;
-}
-
-CRGBPalette16 PaletteManager::GetPalette(uint8_t paletteName) {
-  switch(paletteName) {
-    case PN_OCEAN:
-      return (CRGBPalette16)OceanColors_p;
-    case PN_LAVA:
-      return (CRGBPalette16)LavaColors_p;
-    case PN_FOREST:
-      return (CRGBPalette16)ForestColors_p;
-    case PN_CLOUD:
-      return (CRGBPalette16)CloudColors_p;
-    case PN_PARTY:
-      return (CRGBPalette16)PartyColors_p;
-    case PN_RAINBOW:
-      return (CRGBPalette16)RainbowStripesColors_p;
-    case PN_HEAT:
-      return (CRGBPalette16)HeatColors_p;
-    case PN_PASTEL:
-      return (CRGBPalette16)PastelColors_p;
-    case PN_LOVE:
-      return (CRGBPalette16)LoveColors_p;
-    case PN_STROBE:
-      return (CRGBPalette16)StrobeColors_p;
-  }
-}
-
-void PaletteManager::PaletteRGB2HSV(CRGBPalette16* rgbPalette, CHSVPalette16* hsvPalette) {
-  for(uint8_t i = 0; i < 16; i++)
-    hsvPalette->entries[i] = rgb2hsv_approximate(rgbPalette->entries[i]);
+void PaletteManager::NextPalette(uint32_t curTime) {
+  memcpy(oldPalette, targetPalette, sizeof(CHSV)*PALETTE_SIZE);
+  memcpy(palette, targetPalette, sizeof(CHSV)*PALETTE_SIZE);
+  target = (target + 1) % NUM_PALETTES;
+  memcpy(targetPalette, allPalettes[target], sizeof(CHSV)*PALETTE_SIZE);
+  lastSwitchTime = curTime;
 }
 
