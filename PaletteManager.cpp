@@ -46,7 +46,7 @@ void PaletteManager::SetPauseLength(uint32_t newPauseLength) {
     // Haven't started blending yet
     if(*curTime - lastSwitchTime > newPauseLength) {
       // Start blending immediately; but start at 0
-      lastSwitchTime - *curTime - newPauseLength;
+      lastSwitchTime = *curTime - newPauseLength;
     }
   }
   else {
