@@ -1,7 +1,7 @@
 #ifndef PALETTE_MANAGER_H
 #define PALETTE_MANAGER_H
 
-#include "PaletteManager.cfg"
+#include "PaletteManagerConfig.h"
 
 class PaletteManager {
   public:
