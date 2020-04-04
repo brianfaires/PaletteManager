@@ -8,12 +8,12 @@ class PaletteManager {
 	
 	/// Object management
   PaletteManager(); 
-  void Init(uint32_t* _curTime, uint32_t intialWalkLength, uint32_t intialPauseLength, uint8_t initialPalette);
+  void Init(uint32_t* _curTime, uint32_t intialWalkLength, uint32_t intialPauseLength, PaletteIndex initialPalette);
   void SkipTime(uint32_t amount);
 	
     /// Accessors
-	uint8_t getTarget();
-  void setTarget(uint8_t newTarget);
+	PaletteIndex getTarget();
+  void setTarget(PaletteIndex newTarget);
 
   uint32_t getWalkLength();
   void setWalkLength(uint32_t newWalkLength);
@@ -28,7 +28,7 @@ class PaletteManager {
 
   private:
 	  uint32_t* curTime;
-    uint8_t target;
+    PaletteIndex target;
     uint32_t walkLength;
     uint32_t pauseLength;
     

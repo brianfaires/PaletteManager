@@ -2,21 +2,21 @@
 
 /// Object management
 PaletteManager::PaletteManager() { }
-void PaletteManager::Init(uint32_t* _curTime, uint32_t initialWalkLength, uint32_t intialPauseLength, uint8_t initialPalette) {
+void PaletteManager::Init(uint32_t* _curTime, uint32_t initialWalkLength, uint32_t intialPauseLength, PaletteIndex initialPalette) {
   curTime = _curTime;
   walkLength = initialWalkLength;
   pauseLength = intialPauseLength;
-  target = initialPalette % NUM_PALETTES;
-  NextPalette();
+  target = initialPalette;
+  NextPalette(); // Loads initialPalette, sets next target, and resets timer
 }
 void PaletteManager::SkipTime(uint32_t amount) {
   lastSwitchTime += amount;
 }
 
 /// Accessors
-uint8_t PaletteManager::getTarget() { return target; }
-void PaletteManager::setTarget(uint8_t newTarget) {
-  target = newTarget % NUM_PALETTES;
+PaletteIndex PaletteManager::getTarget() { return target; }
+void PaletteManager::setTarget(PaletteIndex newTarget) {
+  target = newTarget;
   
   if(*curTime - lastSwitchTime > pauseLength) {
     // Already blending. Reset target and start blending from current palette.
@@ -63,13 +63,15 @@ void PaletteManager::setPauseLength(uint32_t newPauseLength) {
 
 /// Logic
 void PaletteManager::Update() {
+  CHSV* targetPalette = allPalettes[static_cast<uint8_t>(target)];
+
   if(*curTime - lastSwitchTime >= pauseLength) {
     // Currently transitioning
     uint32_t transitionTime = *curTime - lastSwitchTime - pauseLength;
     if(transitionTime < walkLength) {
       fract8 blendAmount = 0x100 * transitionTime / walkLength;
       for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
-        palette[i] = blend(oldPalette[i], allPalettes[target][i], blendAmount, SHORTEST_HUES);
+        palette[i] = blend(oldPalette[i], targetPalette[i], blendAmount, SHORTEST_HUES);
       }
     }
     else {
@@ -80,13 +82,9 @@ void PaletteManager::Update() {
 }
 
 void PaletteManager::NextPalette() {
-  memcpy(oldPalette, allPalettes[target], sizeof(CHSV)*PALETTE_SIZE);
-  memcpy(palette, allPalettes[target], sizeof(CHSV)*PALETTE_SIZE);
-  target = (target + 1) % NUM_PALETTES;
+  memcpy(oldPalette, allPalettes[(uint8_t)target], sizeof(CHSV)*PALETTE_SIZE);
+  memcpy(palette, allPalettes[(uint8_t)target], sizeof(CHSV)*PALETTE_SIZE);
+  target = static_cast<PaletteIndex>((static_cast<uint8_t>(target) + 1) % NUM_PALETTES);
   lastSwitchTime = *curTime;
-
-  // todo: Alternatively, directly access the pointer and get rid of target
-  //targetPalette += sizeof(CHSV)*PALETTE_SIZE;
-  //if(targetPalette == allPalettes[sizeof(CHSV)*NUM_PALETTES]) { targetPalette -= sizeof(CHSV)*NUM_PALETTES; }
 }
 

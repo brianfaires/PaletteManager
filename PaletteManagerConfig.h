@@ -5,6 +5,11 @@
 #define PALETTE_SIZE 6
 #define NUM_PALETTES 32
 
+enum class PaletteIndex {
+	analagousRed, analagousRedOrange, analagousOrange, analagousYellow, analagousGreen, analagousSeaGreen, analagousCyan, analagousBlue, analagousPurple, analagousFusia, analagousPink, analagousPaleRed1, analagousPaleRed2, analagousPaleRed3,
+	triadRed,     triadRedOrange,     triadorange,     triadyellow,     triadGreen,     triadSeaGreen,     triadCyan,     triadBlue,     triadPurple,     triadFusia,     triadPink,     triadPaleOrange,   triadPalePink
+};
+
 static CHSV allPalettes[NUM_PALETTES][PALETTE_SIZE] = {
 	{ CHSV(255,255,255), CHSV(  0,200,255), CHSV(246,185,255), CHSV( 45,230,255), CHSV(155,230,255), CHSV( 96, 90,255) }, // analag Red
 	{ CHSV(  7,255,255), CHSV( 26,255,255), CHSV( 16,255,255), CHSV(  1,255,255), CHSV(  7,235,255), CHSV( 50,180,255) }, // analag RedOrange
@@ -14,12 +19,12 @@ static CHSV allPalettes[NUM_PALETTES][PALETTE_SIZE] = {
 	{ CHSV(111,255,255), CHSV(130,255,255), CHSV( 98,220,255), CHSV( 71,235,255), CHSV( 40,255,255), CHSV( 64,180,255) }, // analag SeaGreen
 	{ CHSV(131,255,255), CHSV(115,220,255), CHSV(150,195,255), CHSV(165,255,255), CHSV( 64,210,255), CHSV(128,115,255) }, // analag Cyan
 	{ CHSV(155,255,255), CHSV(173,255,255), CHSV(127,220,255), CHSV(145,190,255), CHSV( 52,210,255), CHSV( 63,100,255) }, // analag Blue
-	{ CHSV(192,255,255), CHSV(174,255,255), CHSV(210,255,255), CHSV(254,235,255), CHSV(161,235,255), CHSV(  0,  0,255) }, // analag Purp
+	{ CHSV(192,255,255), CHSV(174,255,255), CHSV(210,255,255), CHSV(254,235,255), CHSV(161,235,255), CHSV(  0,  0,255) }, // analag Purple
 	{ CHSV(220,255,255), CHSV(195,255,255), CHSV(240,195,255), CHSV(255,200,255), CHSV(142,255,255), CHSV(  0,  0,255) }, // analag Fusia
 	{ CHSV(245,255,255), CHSV(210,255,255), CHSV(235,185,255), CHSV(230,255,255), CHSV(105,200,255), CHSV(120, 70,255) }, // analag Pink
-	{ CHSV(  1,230,255), CHSV(  9,220,255), CHSV( 19,230,255), CHSV(  8,205,255), CHSV( 25,205,255), CHSV(  5,125,255) }, // anal PaleR1
-	{ CHSV(255,210,255), CHSV(230,200,255), CHSV(195,230,255), CHSV(160,160,255), CHSV(115,150,255), CHSV(200, 80,255) }, // anal PaleR2
-	{ CHSV(  0,180,255), CHSV( 40,220,255), CHSV( 20,220,255), CHSV(138,160,255), CHSV(230,180,255), CHSV(120,100,255) }, // anal PaleR3
+	{ CHSV(  1,230,255), CHSV(  9,220,255), CHSV( 19,230,255), CHSV(  8,205,255), CHSV( 25,205,255), CHSV(  5,125,255) }, // anal PaleRed1
+	{ CHSV(255,210,255), CHSV(230,200,255), CHSV(195,230,255), CHSV(160,160,255), CHSV(115,150,255), CHSV(200, 80,255) }, // anal PaleRed2
+	{ CHSV(  0,180,255), CHSV( 40,220,255), CHSV( 20,220,255), CHSV(138,160,255), CHSV(230,180,255), CHSV(120,100,255) }, // anal PaleRed3
 	{ CHSV(  9,225,255), CHSV( 28,215,255), CHSV( 16,255,255), CHSV( 32,235,255), CHSV(  7,240,255), CHSV( 60,120,255) }, // anal Orange
 	{ CHSV( 96,190,255), CHSV( 69,210,255), CHSV(115,205,255), CHSV( 74,235,255), CHSV( 64,255,255), CHSV(  0,  0,255) }, // anal Green
 	{ CHSV(160,180,255), CHSV(132,210,255), CHSV(116,210,255), CHSV(200,170,255), CHSV(  2,150,255), CHSV(  0,  0,255) }, // anal Blue
