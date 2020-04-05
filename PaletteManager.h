@@ -8,7 +8,7 @@ class PaletteManager {
 	
 	/// Object management
   PaletteManager(); 
-  void Init(uint32_t* _curTime, uint32_t intialWalkLength, uint32_t intialPauseLength, PaletteIndex initialPalette);
+  void Init(uint32_t* _curTime, uint32_t intialWalkLength, uint32_t intialPauseLength, PaletteIndex initialPalette, bool fadeInFromBlack = false);
   void SkipTime(uint32_t amount);
 	
     /// Accessors

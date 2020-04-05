@@ -1,14 +1,24 @@
 #include "PaletteManager.h"
 
+extern CHSV allPalettes[NUM_PALETTES][PALETTE_SIZE]; // To silence the 'unused variable' warning
+
 /// Object management
 PaletteManager::PaletteManager() { }
-void PaletteManager::Init(uint32_t* _curTime, uint32_t initialWalkLength, uint32_t intialPauseLength, PaletteIndex initialPalette) {
+void PaletteManager::Init(uint32_t* _curTime, uint32_t initialWalkLength, uint32_t intialPauseLength, PaletteIndex initialPalette, bool fadeInFromBlack) {
   curTime = _curTime;
   walkLength = initialWalkLength;
   pauseLength = intialPauseLength;
   target = initialPalette;
-  NextPalette(); // Loads initialPalette, sets next target, and resets timer
+  if(fadeInFromBlack) {
+    lastSwitchTime = *curTime;
+    memset(oldPalette, 0, sizeof(CHSV)*PALETTE_SIZE);
+    memset(palette, 0, sizeof(CHSV)*PALETTE_SIZE);
+  }
+  else {
+    NextPalette(); // Loads initialPalette, sets next target, and resets timer
+  }
 }
+
 void PaletteManager::SkipTime(uint32_t amount) {
   lastSwitchTime += amount;
 }
