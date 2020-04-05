@@ -16,7 +16,7 @@ void PaletteManager::SkipTime(uint32_t amount) {
 /// Accessors
 PaletteIndex PaletteManager::getTarget() { return target; }
 void PaletteManager::setTarget(PaletteIndex newTarget) {
-  target = newTarget;
+  target = static_cast<PaletteIndex>(static_cast<uint8_t>(newTarget) % NUM_PALETTES);
   
   if(*curTime - lastSwitchTime > pauseLength) {
     // Already blending. Reset target and start blending from current palette.
