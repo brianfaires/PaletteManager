@@ -28,14 +28,10 @@ void PaletteManager::setTarget(PaletteIndex newTarget) {
 uint32_t PaletteManager::getWalkLength() { return walkLength; }
 void PaletteManager::setWalkLength(uint32_t newWalkLength) {
   if(*curTime - lastSwitchTime > pauseLength) {
-    // Already blending. Reset target and restart blending. (old method)
-    //memcpy(oldPalette, palette, sizeof(CHSV)*PALETTE_SIZE);
-    //lastSwitchTime = *curTime - pauseLength;
-    
     // Already blending.  Determine what % has been done and create same percentage in the new timer
-    uint32_t blendTime = *curTime - lastSwitchTime - pauseLength;
-    uint64_t percBlend = uint64_t(blendTime) * 0x10000 / uint64_t(walkLength);
-    uint64_t newBlendTime = uint64_t(percBlend) * uint64_t(newWalkLength) / 0x10000;
+    uint64_t blendTime = *curTime - lastSwitchTime - pauseLength;
+    fract16 percBlend = blendTime * 0x10000 / walkLength;
+    uint32_t newBlendTime = percBlend * uint64_t(newWalkLength) / 0x10000;
     lastSwitchTime = *curTime - pauseLength - newBlendTime;
   }
 
@@ -44,8 +40,6 @@ void PaletteManager::setWalkLength(uint32_t newWalkLength) {
 
 uint32_t PaletteManager::getPauseLength() { return pauseLength; }
 void PaletteManager::setPauseLength(uint32_t newPauseLength) {
-  //memcpy(oldPalette, palette, sizeof(CHSV)*PALETTE_SIZE); // Todo:This seems unnecessary, right? Even interferes with the else statement
-  
   if(*curTime - lastSwitchTime <= pauseLength) {
     // Haven't started blending yet
     if(*curTime - lastSwitchTime > newPauseLength) {
@@ -69,7 +63,7 @@ void PaletteManager::Update() {
     // Currently transitioning
     uint32_t transitionTime = *curTime - lastSwitchTime - pauseLength;
     if(transitionTime < walkLength) {
-      fract8 blendAmount = 0x100 * transitionTime / walkLength;
+      fract8 blendAmount = uint64_t(transitionTime) * 0x100 / walkLength;
       for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
         palette[i] = blend(oldPalette[i], targetPalette[i], blendAmount, SHORTEST_HUES);
       }
