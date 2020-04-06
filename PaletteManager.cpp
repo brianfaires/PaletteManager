@@ -1,6 +1,5 @@
 #include "PaletteManager.h"
-
-extern CHSV allPalettes[NUM_PALETTES][PALETTE_SIZE]; // To silence the 'unused variable' warning
+#include "PaletteManagerConfig.h"
 
 /// Object management
 PaletteManager::PaletteManager() { }
@@ -67,7 +66,7 @@ void PaletteManager::setPauseLength(uint32_t newPauseLength) {
 
 /// Logic
 void PaletteManager::Update() {
-  CHSV* targetPalette = allPalettes[static_cast<uint8_t>(target)];
+  const CHSV* targetPalette = allPalettes[static_cast<uint8_t>(target)];
 
   if(*curTime - lastSwitchTime >= pauseLength) {
     // Currently transitioning

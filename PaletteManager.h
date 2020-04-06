@@ -1,5 +1,10 @@
 #pragma once
-#include "PaletteManagerConfig.h"
+#include "Arduino.h"
+#include "FastLED.h"
+
+#define PALETTE_SIZE 6
+
+enum class PaletteIndex : uint8_t;
 
 class PaletteManager {
   public:

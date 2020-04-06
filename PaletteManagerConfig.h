@@ -1,16 +1,14 @@
 #pragma once
-#include "Arduino.h"
-#include "FastLED.h"
+#include "PaletteManager.h"
 
-#define PALETTE_SIZE 6
 #define NUM_PALETTES 32
 
-enum class PaletteIndex {
+enum class PaletteIndex : uint8_t {
 	analagousRed, analagousRedOrange, analagousOrange, analagousYellow, analagousGreen, analagousSeaGreen, analagousCyan, analagousBlue, analagousPurple, analagousFusia, analagousPink, analagousPaleRed1, analagousPaleRed2, analagousPaleRed3,
 	triadRed,     triadRedOrange,     triadorange,     triadyellow,     triadGreen,     triadSeaGreen,     triadCyan,     triadBlue,     triadPurple,     triadFusia,     triadPink,     triadPaleOrange,   triadPalePink
 };
 
-static CHSV allPalettes[NUM_PALETTES][PALETTE_SIZE] = {
+static const PROGMEM CHSV allPalettes[NUM_PALETTES][PALETTE_SIZE] = {
 	{ CHSV(255,255,255), CHSV(  0,200,255), CHSV(246,185,255), CHSV( 45,230,255), CHSV(155,230,255), CHSV( 96, 90,255) }, // analag Red
 	{ CHSV(  7,255,255), CHSV( 26,255,255), CHSV( 16,255,255), CHSV(  1,255,255), CHSV(  7,235,255), CHSV( 50,180,255) }, // analag RedOrange
 	{ CHSV( 14,255,255), CHSV( 28,255,255), CHSV(  6,240,255), CHSV( 10,220,255), CHSV(137,220,255), CHSV(137,100,255) }, // analag Orange
